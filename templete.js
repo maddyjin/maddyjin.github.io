@@ -117,7 +117,6 @@ socialMediaAvg.then(function(data) {
     data.forEach(d => {
         d.AvgLikes = +d.AvgLikes; // Convert AvgLikes to numeric
     });
-
     // Define the dimensions and margins for the SVG
     const margin = { top: 20, right: 30, bottom: 70, left: 50 };
     const width = 800 - margin.left - margin.right;
@@ -125,11 +124,11 @@ socialMediaAvg.then(function(data) {
 
     // Create the SVG container
     const svg = d3.select("#barplot")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // Define scales
     const x0 = d3.scaleBand()
@@ -216,13 +215,15 @@ socialMediaAvg.then(function(data) {
 // Prepare you data and load the data again. 
 // This data should contains two columns, date (3/1-3/7) and average number of likes. 
 
-const socialMediaTime = d3.csv("socialMediaTime.csv");
+// Load the data for the line plot
+const socialMediaTime = d3.csv("SocialMediaTime.csv");
 
 socialMediaTime.then(function(data) {
-    // Convert string values to numbers
+    // Convert string values to numbers and verify data structure
     data.forEach(d => {
-          d.AvgLikes = +d.AvgLikes;
-      });
+        d.AvgLikes = +d.AvgLikes; // Convert AvgLikes to numeric
+        d.Date = d.Date.trim(); // Ensure no extra spaces in Date
+    });
 
     // Define the dimensions and margins for the SVG
     const margin = { top: 20, right: 30, bottom: 70, left: 50 };
@@ -237,19 +238,23 @@ socialMediaTime.then(function(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Set up scales for x and y axes  
+    // Set up scales for x and y axes
     const xScale = d3.scalePoint()
-        .domain(data.map(d => d.Date)) // Dates on the x-axis
+        .domain(data.map(d => d.Date)) // All dates on the x-axis
         .range([0, width]);
 
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.AvgLikes)]) // Minimum to maximum AvgLikes
+        .nice() // Adjust to nice round numbers
+        .range([height, 0]);
 
-    // Draw the axis, you can rotate the text in the x-axis here
+    // Add axes
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(xScale))
-        .selectAll("text")
-        .attr("transform", "rotate(-45)")
-        .style("text-anchor", "end");
+        .selectAll("text") // Rotate x-axis labels if too long
+        .style("text-anchor", "end")
+        .attr("transform", "rotate(-25)");
 
     svg.append("g")
         .call(d3.axisLeft(yScale));
@@ -257,7 +262,7 @@ socialMediaTime.then(function(data) {
     // Add x-axis label
     svg.append("text")
         .attr("x", width / 2)
-        .attr("y", height + margin.bottom - 10)
+        .attr("y", height + margin.bottom - 30)
         .style("text-anchor", "middle")
         .text("Date");
 
@@ -271,18 +276,15 @@ socialMediaTime.then(function(data) {
 
     // Draw the line and path. Remember to use curveNatural. 
     const line = d3.line()
-        .x(d => xScale(d.Date))
-        .y(d => yScale(d.AvgLikes))
-        .curve(d3.curveNatural);
+        .x(d => xScale(d.Date)) // X is based on Date
+        .y(d => yScale(d.AvgLikes)) // Y is based on AvgLikes
+        .curve(d3.curveNatural); // Smooth curve for the line
 
-    // Append the line path
+    // Append the line path to the SVG
     svg.append("path")
-        .datum(data)
+        .datum(data) // Bind data to the path
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 2)
         .attr("d", line);
-
 });
-console.log("templete.js is linked correctly!");
-
